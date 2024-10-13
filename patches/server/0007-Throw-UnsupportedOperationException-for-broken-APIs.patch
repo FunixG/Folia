@@ -5,7 +5,7 @@ Subject: [PATCH] Throw UnsupportedOperationException() for broken APIs
 
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 454cac11619fc1e8317db0b95a174f6747af6e60..39e4493ef5c7d4bfd903da18b76e14235a535ab5 100644
+index 4b96a1f9e9ac3b65f7c9f0a3742792395fba1c8e..8d138a38e9e7af10ae6128ecb467e662c86729e7 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -1310,6 +1310,7 @@ public final class CraftServer implements Server {
