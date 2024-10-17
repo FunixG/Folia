@@ -7829,7 +7829,7 @@ index cb308808906a8cdb127df8284e106e00553473ca..05bc1f010b50e673e9a185d96e338bae
              }
  
 diff --git a/src/main/java/net/minecraft/network/Connection.java b/src/main/java/net/minecraft/network/Connection.java
-index 3e550f8e7cd4f4e16f499a8a2a4b95420270f07a..b0136591a37734493a310332b1f56f1259f913af 100644
+index 4a8356a714ed50d4a32bcf046a2e16491bef014b..cf160825199374f2c99ac200b371da95c612043c 100644
 --- a/src/main/java/net/minecraft/network/Connection.java
 +++ b/src/main/java/net/minecraft/network/Connection.java
 @@ -93,7 +93,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
@@ -8089,7 +8089,7 @@ index 3e550f8e7cd4f4e16f499a8a2a4b95420270f07a..b0136591a37734493a310332b1f56f12
  
      }
  
-@@ -887,10 +944,10 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
+@@ -895,10 +952,10 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
  
      public void handleDisconnection() {
          if (this.channel != null && !this.channel.isOpen()) {
@@ -8102,7 +8102,7 @@ index 3e550f8e7cd4f4e16f499a8a2a4b95420270f07a..b0136591a37734493a310332b1f56f12
                  PacketListener packetlistener = this.getPacketListener();
                  PacketListener packetlistener1 = packetlistener != null ? packetlistener : this.disconnectListener;
  
-@@ -922,6 +979,22 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
+@@ -930,6 +987,22 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
                      }
                  }
                  // Paper end - Add PlayerConnectionCloseEvent
@@ -8125,7 +8125,7 @@ index 3e550f8e7cd4f4e16f499a8a2a4b95420270f07a..b0136591a37734493a310332b1f56f12
  
              }
          }
-@@ -942,15 +1015,25 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
+@@ -950,15 +1023,25 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
      // Paper start - Optimize network
      public void clearPacketQueue() {
          final net.minecraft.server.level.ServerPlayer player = getPlayer();
@@ -12521,7 +12521,7 @@ index 5a8a33638ceb1d980ffc3e6dd86e7eb11dfd9375..67b45f2916fa061e7430c6f3987bdb25
  
      public boolean isOldChunkAround(ChunkPos chunkPos, int checkRadius) {
 diff --git a/src/main/java/net/minecraft/server/network/ServerCommonPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerCommonPacketListenerImpl.java
-index 6998f32f8d79dbdb6b31ffaa126602fc4a428616..aae9002c0072f3ca6aefd10e9247116d0995e9b0 100644
+index 7174f8c89a7cdcf40ff28f6636ecfb23b13ccdaa..f1c678337f7760ccec21dadd646a29f6aae3a6bb 100644
 --- a/src/main/java/net/minecraft/server/network/ServerCommonPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerCommonPacketListenerImpl.java
 @@ -113,6 +113,10 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
@@ -12554,19 +12554,7 @@ index 6998f32f8d79dbdb6b31ffaa126602fc4a428616..aae9002c0072f3ca6aefd10e9247116d
  
      }
  
-@@ -137,9 +149,9 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
-             this.keepAlivePending = false;
-         } else if (!this.isSingleplayerOwner()) {
-             // Paper start - This needs to be handled on the main thread for plugins
--            server.submit(() -> {
-+            // Folia - region threading - do not schedule to main anymore, there is no main
-                 this.disconnect(ServerCommonPacketListenerImpl.TIMEOUT_DISCONNECTION_MESSAGE, PlayerKickEvent.Cause.TIMEOUT); // Paper - kick event cause
--            });
-+            // Folia - region threading - do not schedule to main anymore, there is no main
-             // Paper end - This needs to be handled on the main thread for plugins
-         }
- 
-@@ -351,24 +363,8 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
+@@ -347,24 +359,8 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
          if (this.processedDisconnect) {
              return;
          }
@@ -12593,7 +12581,7 @@ index 6998f32f8d79dbdb6b31ffaa126602fc4a428616..aae9002c0072f3ca6aefd10e9247116d
              return;
          }
  
-@@ -401,7 +397,7 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
+@@ -397,7 +393,7 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
  
          Objects.requireNonNull(this.connection);
          // CraftBukkit - Don't wait
@@ -12601,7 +12589,7 @@ index 6998f32f8d79dbdb6b31ffaa126602fc4a428616..aae9002c0072f3ca6aefd10e9247116d
 +        // Folia - region threading
      }
  
-     protected boolean isSingleplayerOwner() {
+     // Paper start - add proper async disconnect
 diff --git a/src/main/java/net/minecraft/server/network/ServerConfigurationPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerConfigurationPacketListenerImpl.java
 index 880e5c52746e9e3a9a1f42ec6461be54e3ee136c..34c7fbf154c42d07b3b317b13632243a81904e3c 100644
 --- a/src/main/java/net/minecraft/server/network/ServerConfigurationPacketListenerImpl.java
@@ -12703,7 +12691,7 @@ index 3a9e25b436f366fffe08c3b0c1fce11ed42ee646..ae88c6e2635b1608383f8c74813d723f
                  Collections.shuffle( this.connections );
              }
 diff --git a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-index befeaac4786760f6847a5945da2296a3e68dbb17..b6abbf351809635fcf3fed1476e3bb2f8ccdaccb 100644
+index 064d52d4479727c6a32bf357be8da32d1760e7fc..4bbe9c0ad321c55b2108c38c409ceea583337ad0 100644
 --- a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 @@ -300,7 +300,7 @@ public class ServerGamePacketListenerImpl extends ServerCommonPacketListenerImpl
@@ -12841,24 +12829,6 @@ index befeaac4786760f6847a5945da2296a3e68dbb17..b6abbf351809635fcf3fed1476e3bb2f
                          return;
                      }
  
-@@ -791,7 +826,7 @@ public class ServerGamePacketListenerImpl extends ServerCommonPacketListenerImpl
-         // PacketUtils.ensureRunningOnSameThread(packet, this, this.player.serverLevel()); // Paper - AsyncTabCompleteEvent; run this async
-         // CraftBukkit start
-         if (this.chatSpamTickCount.addAndGet(io.papermc.paper.configuration.GlobalConfiguration.get().spamLimiter.tabSpamIncrement) > io.papermc.paper.configuration.GlobalConfiguration.get().spamLimiter.tabSpamLimit && !this.server.getPlayerList().isOp(this.player.getGameProfile())) { // Paper - configurable tab spam limits
--            this.disconnect(Component.translatable("disconnect.spam"), org.bukkit.event.player.PlayerKickEvent.Cause.SPAM); // Paper - Kick event cause
-+            this.disconnect(Component.translatable("disconnect.spam"), org.bukkit.event.player.PlayerKickEvent.Cause.SPAM); // Paper - Kick event cause // Folia - region threading
-             return;
-         }
-         // CraftBukkit end
-@@ -803,7 +838,7 @@ public class ServerGamePacketListenerImpl extends ServerCommonPacketListenerImpl
-         // Paper start
-         final int index;
-         if (packet.getCommand().length() > 64 && ((index = packet.getCommand().indexOf(' ')) == -1 || index >= 64)) {
--            this.disconnect(Component.translatable("disconnect.spam"), org.bukkit.event.player.PlayerKickEvent.Cause.SPAM);
-+            this.disconnect(Component.translatable("disconnect.spam"), org.bukkit.event.player.PlayerKickEvent.Cause.SPAM); // Folia - region threading
-             return;
-         }
-         // Paper end
 @@ -828,7 +863,7 @@ public class ServerGamePacketListenerImpl extends ServerCommonPacketListenerImpl
              }
  
@@ -12873,8 +12843,9 @@ index befeaac4786760f6847a5945da2296a3e68dbb17..b6abbf351809635fcf3fed1476e3bb2f
          // Paper end - Book size limits
          // CraftBukkit start
 -        if (this.lastBookTick + 20 > MinecraftServer.currentTick) {
+-            this.disconnectAsync(Component.literal("Book edited too quickly!"), org.bukkit.event.player.PlayerKickEvent.Cause.ILLEGAL_ACTION); // Paper - kick event cause // Paper - add proper async disconnect
 +        if (this.lastBookTick + 20 > this.lastTick) { // Folia - region threading
-             this.disconnect(Component.literal("Book edited too quickly!"), org.bukkit.event.player.PlayerKickEvent.Cause.ILLEGAL_ACTION); // Paper - kick event cause
++            this.disconnectAsync(Component.literal("Book edited too quickly!"), org.bukkit.event.player.PlayerKickEvent.Cause.ILLEGAL_ACTION); // Paper - add proper async disconnect
              return;
          }
 -        this.lastBookTick = MinecraftServer.currentTick;
